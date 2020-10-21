@@ -70,6 +70,10 @@ class IndexController {
     @Autowired
     private SysShortcutMenuService sysShortcutMenuService;
 
+    @Value("${server.servlet.context-path:}")
+    private String contextPath;
+
+
     /**
      * 端口
      */
@@ -85,11 +89,10 @@ class IndexController {
             try {
                 //系统启动时获取数据库数据，设置到公用静态集合sysSettingMap
                 SysSettingVo sysSettingVo = sysSettingService.get("1").getData();
-                sysSettingVo.setUserInitPassword(null);//隐藏部分属性
                 SysSettingUtil.setSysSettingMap(sysSettingVo);
 
                 //获取本机内网IP
-                log.info("启动成功：" + "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + "/");
+                log.info("启动成功：" + "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + contextPath);
             } catch (UnknownHostException e) {
                 //输出到日志文件中
                 log.error(ErrorUtil.errorInfoToString(e));
@@ -152,6 +155,7 @@ class IndexController {
         String publicKey = RsaUtil.getPublicKey();
         log.info("后端公钥：" + publicKey);
         modelAndView.addObject("publicKey", publicKey);
+
         return modelAndView;
     }
 

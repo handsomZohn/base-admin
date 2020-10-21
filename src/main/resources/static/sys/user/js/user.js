@@ -106,6 +106,9 @@ layui.use(['element', 'form', 'table', 'layer', 'laydate', 'tree', 'util'], func
                 $("input[name='createTime']").val(nowTime);
                 $("input[name='updateTime']").val(nowTime);
                 $("input[name='lastChangePwdTime']").val(nowTime);
+
+                $("input[name='loginName']").removeAttr("readonly");
+
                 form.render();
                 loadMenuTree();
                 loadAuthorityTree();
@@ -153,6 +156,8 @@ layui.use(['element', 'form', 'table', 'layer', 'laydate', 'tree', 'util'], func
         else if (obj.event === 'edit') {
             //回显操作表单
             $("#userForm").form(data);
+            $("input[name='loginName']").attr("readonly","readonly");
+
             form.render();
             loadMenuTree();
             loadAuthorityTree();
@@ -183,6 +188,12 @@ function userFormSave() {
     let userForm = $("#userForm").serializeObject();
     userForm.updateTime = commonUtil.getNowTime();
     $.post(ctx + "/sys/sysUser/save", userForm, function (data) {
+
+        if(!data.flag){
+            layer.msg(data.msg, {icon: 2,time: 2000}, function () {});
+            return;
+        }
+
         //保存用户菜单跟用户权限,只要userId，以及Id集合就可以了
         let menuIdList = [];
         for (let check of tree.getChecked('userMenuTree')[0].children) {
@@ -209,7 +220,6 @@ function userFormSave() {
         };
         $.post(ctx + "/sys/sysUserAuthority/saveAllByUserId", postData2, function (data) {});
 
-
         layer.msg("保存成功", {icon: 1, time: 2000}, function () {});
 
         //更新table、updateTime
@@ -228,11 +238,14 @@ function resetPassword() {
         });
         return;
     }
-    $.post(ctx + "/sys/sysUser/resetPassword", userForm, function (data) {
-        if (data.flag) {
-            layer.msg("密码重置成功，请尽快登录系统修改密码！", {icon: 1, time: 2000}, function () {
-            });
-        }
+
+    layer.confirm('确认重置该用户的密码吗？', function (index) {
+        $.post(ctx + "/sys/sysUser/resetPassword", userForm, function (data) {
+            if (data.flag) {
+                layer.msg("密码重置成功，请尽快通知用户登录系统修改密码！", {icon: 1, time: 2000}, function () {});
+            }
+            layer.close(index);
+        });
     });
 }
 
